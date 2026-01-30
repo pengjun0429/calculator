@@ -3,101 +3,191 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>辛承霖製作 | 萬用計算機</title>
+    <title>萬用計算機 - 2026</title>
     <style>
-        :root {
-            --primary: #6366f1;
-            --bg: #0f172a;
-            --glass: rgba(255, 255, 255, 0.05);
+        /* 整體背景設定 */
+        body {
+            background-color: #0f172a;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: "Microsoft JhengHei", sans-serif;
         }
-        body { 
-            font-family: 'PingFang TC', sans-serif; 
-            background: radial-gradient(circle at top left, #1e293b, #0f172a);
-            color: #fff;
-            display: flex; justify-content: center; align-items: center; 
-            min-height: 100vh; margin: 0;
-        }
-        .container { 
-            background: var(--glass);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 2rem; border-radius: 28px; 
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-            width: 90%; max-width: 420px;
-        }
-        h2 { font-size: 1.5rem; margin-bottom: 0.5rem; text-align: center; font-weight: 700; }
-        .info { font-size: 0.8rem; color: #94a3b8; text-align: center; margin-bottom: 2rem; }
-        
-        .input-group { 
-            display: flex; 
-            gap: 10px;
-            margin-bottom: 1.5rem;
-        }
-        input { 
-            background: rgba(15, 23, 42, 0.8);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            color: #fff; 
-            padding: 12px; 
-            border-radius: 12px;
-            font-size: 1rem;
-            outline: none;
-            height: 50px;
+
+        /* 計算機主容器 */
+        .calculator-card {
+            background-color: #1e293b;
+            padding: 40px;
+            border-radius: 24px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+            width: 90%;
+            max-width: 450px;
             text-align: center;
-            transition: 0.3s;
+            border: 1px solid #334155;
         }
-        /* 讓左右兩邊數字格子大一點，中間符號格子小一點 */
-        input[name="st"], input[name="nd"] { flex: 3; }
-        input[name="mode"] { flex: 1.5; background: rgba(99, 102, 241, 0.1); border-color: var(--primary); }
 
-        input:focus { border-color: var(--primary); background: rgba(15, 23, 42, 1); }
-
-        button { 
-            width: 100%; height: 50px; border-radius: 12px; border: none;
-            font-size: 1rem; font-weight: 600; cursor: pointer;
-            transition: 0.2s;
+        /* 標題與版權資訊 */
+        h2 {
+            color: #f8fafc;
+            margin-bottom: 5px;
+            letter-spacing: 2px;
         }
-        .btn-calc { background: var(--primary); color: white; margin-bottom: 10px; }
-        .btn-calc:hover { opacity: 0.9; transform: scale(1.02); }
-        .btn-save { background: #22c55e; color: white; }
-
-        .res-box { 
-            margin-top: 1.5rem; padding: 1.2rem; 
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 16px; border-left: 4px solid var(--primary);
-            text-align: center; font-size: 1.1rem;
+        .copyright {
+            color: #94a3b8;
+            font-size: 0.8rem;
+            margin-bottom: 30px;
         }
-        .storage { margin-top: 2rem; text-align: center; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 1rem; }
-        b { color: var(--primary); }
+
+        /* 輸入區域佈局 - 解決你原本格子溢出的關鍵 */
+        .input-group {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+
+        .input-field {
+            flex: 2; /* 數字輸入框佔比大一點 */
+            background-color: #0f172a;
+            border: 2px solid #334155;
+            border-radius: 12px;
+            padding: 15px;
+            color: #e2e8f0;
+            font-size: 1.1rem;
+            text-align: center;
+            transition: border-color 0.3s;
+            min-width: 0; /* 防止 Flex 項目被內容撐開 */
+        }
+
+        .input-field:focus {
+            border-color: #6366f1;
+            outline: none;
+        }
+
+        /* 運算符號選擇框 */
+        .operator-select {
+            flex: 1; /* 符號框佔比小一點 */
+            cursor: pointer;
+            background-color: #1e1b4b;
+            border-color: #4338ca;
+        }
+
+        /* 計算按鈕 */
+        .calc-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+            color: white;
+            border: none;
+            padding: 16px;
+            border-radius: 12px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.1s, box-shadow 0.3s;
+            margin-bottom: 20px;
+        }
+
+        .calc-btn:active {
+            transform: scale(0.98);
+        }
+
+        .calc-btn:hover {
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.4);
+        }
+
+        /* 訊息顯示區 */
+        .msg-container {
+            min-height: 24px;
+            margin-bottom: 20px;
+        }
+
+        .error { color: #f87171; font-weight: bold; }
+        .success { color: #4ade80; font-size: 1.3rem; font-weight: bold; }
+
+        hr {
+            border: 0;
+            border-top: 1px solid #334155;
+            margin-bottom: 20px;
+        }
+
+        /* 紀錄區 */
+        .history {
+            color: #94a3b8;
+            font-size: 0.9rem;
+        }
+        #result-history {
+            color: #818cf8;
+            margin-left: 5px;
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h2>=== 萬用計算機 ===</h2>
-        <div class="info">© 2026 辛承霖製作 | 支援 s 紀錄 v4.0</div>
+
+<div class="calculator-card">
+    <h2>=== 萬用計算機 ===</h2>
+    <p class="copyright">© 2026 辛承霖製作 | 支援 s 紀錄</p>
+
+    <div class="input-group">
+        <input type="number" id="num1" class="input-field" placeholder="數字1">
         
-        <form method="POST">
-            <div class="input-group">
-                <input type="text" name="st" placeholder="數字1" required>
-                <input type="text" name="mode" placeholder="+-*/" required>
-                <input type="text" name="nd" placeholder="數字2" required>
-            </div>
-            <button type="submit" name="action" value="calc" class="btn-calc">開始計算 🚀</button>
-        </form>
+        <select id="operator" class="input-field operator-select">
+            <option value="+">+</option>
+            <option value="-">-</option>
+            <option value="*">*</option>
+            <option value="/">/</option>
+        </select>
 
-        {% if ans %}
-            <div class="res-box">{{ ans }}</div>
-            <form method="POST">
-                <input type="hidden" name="current_ans" value="{{ raw_res }}">
-                <button type="submit" name="action" value="save" class="btn-save">儲存結果 (i)</button>
-            </form>
-        {% endif %}
-
-        {% if error %}<div style="color:#ef4444; text-align:center; margin-top:10px; font-size: 0.9rem;">{{ error }}</div>{% endif %}
-
-        <div class="storage">
-            💾 目前紀錄 (s): <b>{{ s_val if s_val is not none else "無資料" }}</b>
-        </div>
+        <input type="number" id="num2" class="input-field" placeholder="數字2">
     </div>
+
+    <button class="calc-btn" onclick="calculate()">開始計算 🚀</button>
+
+    <div class="msg-container" id="message">
+        </div>
+
+    <hr>
+
+    <div class="history">
+        💾 目前紀錄 (s): <span id="result-history">無資料</span>
+    </div>
+</div>
+
+<script>
+    function calculate() {
+        const n1 = parseFloat(document.getElementById('num1').value);
+        const n2 = parseFloat(document.getElementById('num2').value);
+        const op = document.getElementById('operator').value;
+        const msgArea = document.getElementById('message');
+        const historyArea = document.getElementById('result-history');
+
+        // 1. 檢查是否輸入數字
+        if (isNaN(n1) || isNaN(n2)) {
+            msgArea.innerHTML = '<span class="error">❌ 錯誤：請輸入有效的數字！</span>';
+            return;
+        }
+
+        // 2. 處理除以零
+        if (op === '/' && n2 === 0) {
+            msgArea.innerHTML = '<span class="error">❌ 錯誤：不能除以零！</span>';
+            return;
+        }
+
+        // 3. 執行計算
+        let res;
+        switch(op) {
+            case '+': res = n1 + n2; break;
+            case '-': res = n1 - n2; break;
+            case '*': res = n1 * n2; break;
+            case '/': res = n1 / n2; break;
+        }
+
+        // 4. 顯示結果與紀錄 (保留兩位小數避免太長)
+        const finalResult = Math.round(res * 100) / 100;
+        msgArea.innerHTML = `<span class="success">結果：${finalResult}</span>`;
+        historyArea.innerText = finalResult;
+    }
+</script>
+
 </body>
 </html>
-
