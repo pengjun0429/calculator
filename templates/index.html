@@ -2,106 +2,71 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>萬用計算機</title>
+    <title>701班03辛承霖 - 萬用計算機</title>
     <style>
-        body { background-color: #0f172a; color: white; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; font-family: sans-serif; }
-        .container { background-color: #1e2235; padding: 30px; border-radius: 24px; width: 380px; box-shadow: 0 15px 35px rgba(0,0,0,0.6); text-align: center; border: 1px solid #334155; position: relative; overflow: hidden; }
-        h2 { margin-bottom: 5px; letter-spacing: 1px; }
-        .info { color: #94a3b8; font-size: 0.8rem; margin-bottom: 25px; }
-        .input-group { display: flex; gap: 10px; margin-bottom: 20px; }
-        .input-field { flex: 1; background: #2a2f45; border: 1px solid #3f445e; color: white; padding: 12px; border-radius: 12px; text-align: center; font-size: 1rem; outline: none; min-width: 0; transition: 0.3s; }
-        .operator { flex: 0.7; border: 2px solid #5865f2; }
-        .input-field:focus { border-color: #818cf8; background: #333952; }
-        .calc-btn { width: 100%; padding: 16px; background: linear-gradient(135deg, #6366f1, #4f46e5); border: none; border-radius: 12px; color: white; font-weight: bold; font-size: 1.1rem; cursor: pointer; box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3); }
-        .calc-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4); }
-        #msg { margin: 15px 0; min-height: 24px; font-weight: bold; }
-        hr { border: 0; border-top: 1px solid #334155; margin: 20px 0; }
-        .history { color: #94a3b8; font-size: 0.9rem; }
-        #s-record { color: #818cf8; }
-        /* 彩蛋特效：晃動動畫 */
-        .shake { animation: shake 0.5s; }
-        @keyframes shake {
-            0% { transform: translateX(0); }
-            25% { transform: translateX(-5px); }
-            50% { transform: translateX(5px); }
-            75% { transform: translateX(-5px); }
-            100% { transform: translateX(0); }
+        body { background-color: #0f172a; color: white; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .container { background: #1e2235; padding: 35px; border-radius: 24px; width: 400px; text-align: center; border: 1px solid #334155; }
+        h2 { margin-bottom: 5px; }
+        .author { color: #94a3b8; font-size: 0.8rem; margin-bottom: 25px; }
+        
+        /* 解決格子跑出版的問題：使用 box-sizing 並設定寬度 */
+        .input-box {
+            width: 100%;
+            padding: 15px;
+            box-sizing: border-box; /* 確保 padding 不會撐破格子 */
+            background: #0f172a;
+            border: 2px solid #5865f2;
+            border-radius: 12px;
+            color: white;
+            font-size: 1.1rem;
+            text-align: center;
+            margin-bottom: 20px;
+            outline: none;
         }
+
+        .calc-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #6366f1, #4f46e5);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 1.1rem;
+        }
+
+        .calc-btn:hover { opacity: 0.9; }
+        .msg { margin-top: 20px; min-height: 24px; font-weight: bold; }
+        .error { color: #f87171; }
+        .success { color: #4ade80; }
+        hr { border: 0.5px solid #334155; margin: 25px 0; }
+        .history { color: #94a3b8; font-size: 0.9rem; }
     </style>
 </head>
 <body>
 
-<div class="container" id="card">
+<div class="container">
     <h2>=== 萬用計算機 ===</h2>
-    <p class="info">© 2026 辛承霖製作 | 支援紀錄功能 v5.1.2</p>
+    <p class="author">701班03辛承霖 製作 | 支援 s 紀錄</p>
 
-    <div class="input-group">
-        <input type="text" id="num1" class="input-field" placeholder="數字1">
-        <input type="text" id="op" class="input-field operator" placeholder="+-*/">
-        <input type="text" id="num2" class="input-field" placeholder="數字2">
+    <form method="POST">
+        <input type="text" name="expr" class="input-box" placeholder="請輸入算式 (例如: 10 + s)" required>
+        <button type="submit" class="calc-btn">執行運算 🚀</button>
+    </form>
+
+    <div class="msg">
+        {% if error %}<div class="error">{{ error }}</div>{% endif %}
+        {% if ans %}<div class="success">{{ ans }}</div>{% endif %}
     </div>
 
-    <button class="calc-btn" onclick="runCalc()">開始計算 🚀</button>
-
-    <div id="msg"></div>
-
     <hr>
-    <div class="history">💾 目前紀錄 (s): <span id="s-record">無資料</span></div>
+    <div class="history">
+        💾 目前紀錄 (s): <span style="color: #818cf8; font-weight: bold;">
+            {{ s_val if s_val is not none else "(無紀錄)" }}
+        </span>
+    </div>
 </div>
-
-<script>
-    function runCalc() {
-        const n1 = document.getElementById('num1').value.trim();
-        const n2 = document.getElementById('num2').value.trim();
-        const op = document.getElementById('op').value.trim().toLowerCase(); // 轉小寫方便判斷 qq
-        const msg = document.getElementById('msg');
-        const record = document.getElementById('s-record');
-        const card = document.getElementById('card');
-
-        // 隱藏彩蛋：輸入 qq
-        if (op === "qq") {
-            msg.style.color = "#ff79c6";
-            msg.innerText = "✨ 發現彩蛋！計算機不想工作，它想哭 QQ ✨";
-            card.classList.add('shake');
-            setTimeout(() => card.classList.remove('shake'), 500);
-            record.innerText = "😭 (哭臉)";
-            return;
-        }
-
-        const v1 = parseFloat(n1);
-        const v2 = parseFloat(n2);
-
-        if (n1 === "" || n2 === "" || isNaN(v1) || isNaN(v2)) {
-            msg.style.color = "#ff5f5f";
-            msg.innerText = "❌ 錯誤：請輸入有效的數字！";
-            return;
-        }
-
-        let result;
-        switch(op) {
-            case '+': result = v1 + v2; break;
-            case '-': result = v1 - v2; break;
-            case '*': result = v1 * v2; break;
-            case '/': 
-                if (v2 === 0) {
-                    msg.style.color = "#ff5f5f";
-                    msg.innerText = "❌ 錯誤：不能除以零！";
-                    return;
-                }
-                result = v1 / v2; break;
-            default:
-                msg.style.color = "#ff5f5f";
-                msg.innerText = "❌ 錯誤：無效的運算符號！";
-                return;
-        }
-
-        msg.style.color = "#4ade80";
-        msg.innerText = "計算成功！結果是：" + result;
-        record.innerText = result;
-    }
-</script>
 
 </body>
 </html>
-
