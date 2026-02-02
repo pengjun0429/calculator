@@ -1,20 +1,20 @@
 from flask import Flask, render_template, request
-#看好,這是必須的
+import re
 import operator
-#--------------------
 
 app = Flask(__name__)
 
-# ???不知道
+# 保留原本的運算定義與對照表
 ops = {
-    "加": (operator.add, "+"), "+": (operator.add, "+"),
-    "減": (operator.sub, "-"), "-": (operator.sub, "-"),
-    "乘": (operator.mul, "*"), "*": (operator.mul, "*"),
-    "除": (operator.truediv, "/"), "/": (operator.truediv, "/")
+    "+": operator.add, "-": operator.sub, 
+    "*": operator.mul, "/": operator.truediv
 }
 
-# 全域變數
+# 全域變數 s 紀錄
 s = {"val": None}
+
+# 保留原本的正則表達式
+pattern = re.compile(r"\s*(s|\d+(\.\d+)?)\s*([\+\-\*/])\s*(s|\d+(\.\d+)?)")
 
 @app.route("/", methods=["GET", "POST"])
 def index():
@@ -22,57 +22,43 @@ def index():
     error_msg = ""
     
     if request.method == "POST":
-        action = request.form.get("action")
+        # 取得前端輸入的整串算式，例如 "s + 10" 或 "5 * 5"
+        expr = request.form.get("expr", "").strip()
         
-        # 處理儲存邏輯
-        if action == "save":
-            current_ans = request.form.get("current_ans")
-            if current_ans:
-                s["val"] = float(current_ans)
-                ans_display = f"(已儲存) 目前紀錄為: {s['val']}"
+        # 1. 處理彩蛋
+        if expr.lower() == "qq":
+            ans_display = "✨ 發現彩蛋：別哭了 QQ ✨"
             return render_template("index.html", ans=ans_display, s_val=s["val"])
 
-        # 1. 選擇模式
-        mode = request.form.get("mode").strip()
-        
-        # 彩蛋
-        if mode.lower() == 'qq':
-            ans_display = "別哭"
-            return render_template("index.html", ans=ans_display, s_val=s["val"])
+        # 2. 解析算式 (保留你的 re 邏輯)
+        match = pattern.fullmatch(expr)
+        if not match:
+            error_msg = "❌ 無效算式，請輸入如 '5 + 5' 或 's * 2'"
+        else:
+            a_str, op, b_str = match.group(1), match.group(3), match.group(4)
             
-        if mode not in ops:
-            error_msg = "❌ 輸入錯誤,請重新選擇。"
-            return render_template("index.html", error=error_msg, s_val=s["val"])
+            try:
+                # 3. 轉換數字 (s 或是 float)
+                val_a = s["val"] if a_str == "s" else float(a_str)
+                val_b = s["val"] if b_str == "s" else float(b_str)
 
-        # 2. 取得數字 
-        try:
-            raw_st = request.form.get("st").strip().lower()
-            raw_nd = request.form.get("nd").strip().lower()
-            
-            st = s["val"] if raw_st == 's' else float(raw_st)
-            nd = s["val"] if raw_nd == 's' else float(raw_nd)
-            
-            if st is None or nd is None:
-                error_msg = "❌ 目前無儲存紀錄，請輸入數字。"
-                return render_template("index.html", error=error_msg, s_val=s["val"])
+                if val_a is None or val_b is None:
+                    error_msg = "❌ 目前無紀錄，請先輸入數字運算"
+                else:
+                    # 4. 執行運算
+                    if op == "/" and val_b == 0:
+                        error_msg = "❌ 錯誤：不能除以零！"
+                    else:
+                        ans = ops[op](val_a, val_b)
+                        ans_display = f"{val_a} {op} {val_b} = {ans}"
+                        
+                        # 5. 更新 s 紀錄 (這就是你 py 裡的 s = ans)
+                        s["val"] = ans
+                        
+            except Exception as e:
+                error_msg = f"發生錯誤: {e}"
 
-            # 3. 執行運算
-            func, symbol = ops[mode]
-            
-            # 處理除以零:)
-            if symbol == "/" and nd == 0:
-                error_msg = "❌ 錯誤：不能除以零！"
-            else:
-                result = func(st, nd)
-                # 4. 結果
-                ans_display = f"計算結果: {st} {symbol} {nd} = {result}"
-                return render_template("index.html", ans=ans_display, raw_res=result, s_val=s["val"])
-        
-        except ValueError:
-            error_msg = "⚠️ 請輸入有效的數字，或輸入 's' 使用上一次結果。"
+    return render_template("index.html", ans=ans_display, error=error_msg, s_val=s["val"])
 
-    return render_template("index.html", error=error_msg, s_val=s["val"])
-
-#辛承霖你別管
 if __name__ == "__main__":
     app.run(debug=True)
